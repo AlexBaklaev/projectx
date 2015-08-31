@@ -2,36 +2,60 @@
 <%@page import="connectsql.RequestSQL"%>
 <%@page import="java.sql.Connection"%>
 <%@page contentType="text/html" pageEncoding="UTF-8"%>
-<!DOCTYPE html>
+<%@taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core"%>
+<%@taglib prefix="sql" uri="http://java.sun.com/jsp/jstl/sql"%>
 
-<% 
-    Connection con;
-    con = RequestSQL.getDbConnection();
-    ArrayList<String> resp;
-    resp = RequestSQL.doRequestEditPage(con, "SELECT * FROM contact WHERE Id = 5");
-  
+<sql:query var="subjects" dataSource="jdbc/POOLCONN">
+    SELECT Name, Telephone, Email FROM contact
+    WHERE Id = ${rowNum}
+</sql:query>
+
+<%
+    ArrayList<String> inputTypeName = new ArrayList();
+    inputTypeName.add("name");
+    inputTypeName.add("telephone");
+    inputTypeName.add("email");
+
+    ArrayList<String> headerOfField = new ArrayList();
+    headerOfField.add("Name: ");
+    headerOfField.add("Telephone: ");
+    headerOfField.add("Email: ");
+
+    int counterList = 0;
 %>
 
+<!DOCTYPE html>
 <html>
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <title>Edit Contact</title>
     </head>
     <body>
-        
-        <form action="redaction.htm" method="POST">
-            <table>
-                <tr>
-                    <td>Id:</td>
-                    <td><input type="text" name="id" value="<% out.print(resp.get(0)); %>" /></td>
-                    <td>Name:</td>
-                    <td><input type="text" name="name" value="<% out.print(resp.get(1)); %>" /></td>
-                    <td>Telephone:</td>
-                    <td><input type="text" name="telephone" value="<% out.print(resp.get(2)); %>" /></td>
-                    <td>Email:</td>
-                    <td><input type="text" name="email" value="<% out.print(resp.get(3)); %>" /></td>
-                    <td><button name="submit">Edit</button></td>
-                </tr>
+        <script>
+            function empty_name() {
+                var txt = document.getElementById('name').value;
+                if (txt === '') {
+                    alert('Необходимо заполнить поле Name!');
+                    return false;
+                }
+                return true;
+            }
+        </script>
+        <form onsubmit="return empty_name()" action="redaction.htm" method="POST">
+            <table border="0">
+                <c:forEach var="row" items="${subjects.rowsByIndex}">
+                    <tr>
+                        <c:forEach var="column" items="${row}">
+                            <td style="background: #E9F0FC">
+                                <b><% out.print(headerOfField.get(counterList)); %></b>
+                            </td>
+                            <td style="background: #E9F0FC">
+                                <input type="text" id="<% out.print(inputTypeName.get(counterList)); %>" name="<% out.print(inputTypeName.get(counterList++));%>" value="<c:out value="${column}"/>" />
+                            </td>
+                        </c:forEach>
+                        <td><button name="Id" value="${rowNum}" >Submit</button></td>
+                    </tr>
+                </c:forEach>
             </table>
         </form>
     </body>
